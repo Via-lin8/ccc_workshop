@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1141207 CCC 實務工作坊 - 前測問卷</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        morandi: {
+                            bg: '#F0F2F0',       // 淺灰背景
+                            card: '#FFFFFF',     // 卡片白
+                            primary: '#6B7A8F',  // 霧霾藍 (標題、重點)
+                            secondary: '#9CAFB7',// 淺藍灰 (次要文字)
+                            accent: '#D5CABD',   // 奶茶色 (按鈕、裝飾)
+                            accentHover: '#BDB0A4',
+                            text: '#4A4A4A',     // 深灰字體
+                            lightText: '#888888',
+                            green: '#8F9E8B',    // 莫蘭迪綠 (選項選中)
+                            input: '#F5F5F5'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans TC', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #F2F4F6; /* Fallback */
+        }
+        /* 自定義 Radio Button 樣式 */
+        input[type="radio"]:checked + span {
+            background-color: #8F9E8B;
+            color: white;
+            border-color: #8F9E8B;
+        }
+        /* 讓選項卡片有微互動 */
+        .option-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .scale-radio:checked + div {
+            background-color: #8F9E8B;
+            color: white;
+            border-color: #8F9E8B;
+        }
+        /* Modal 動畫 */
+        .modal-animate {
+            animation: fadeIn 0.3s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="bg-morandi-bg text-morandi-text min-h-screen py-10 px-4 md:px-0">
+
+    <div class="max-w-3xl mx-auto space-y-6">
+        
+        <!-- Header Section -->
+        <header class="bg-morandi-card rounded-2xl shadow-sm p-8 border-t-8 border-morandi-primary text-center">
+            <h1 class="text-2xl md:text-3xl font-bold text-morandi-primary mb-4 tracking-wide">1141207 CCC 實務工作坊</h1>
+            <h2 class="text-xl text-morandi-secondary font-medium mb-6">前測問卷</h2>
+            <p class="text-morandi-text leading-relaxed text-justify md:text-center text-sm md:text-base">
+                為掌握與會者對 CCC (Clinical Competence Committee) 運作的熟悉度，請填寫您<span class="font-bold text-morandi-primary">「目前」</span>的狀態。本問卷結果僅供教學部調查工作坊教師參與成效參考，請放心填答。
+            </p>
+        </header>
+
+        <form id="cccForm" class="space-y-6" onsubmit="handleSubmit(event)">
+            
+            <!-- Section 1: Basic Information -->
+            <section class="bg-morandi-card rounded-2xl shadow-sm p-6 md:p-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-1 h-6 bg-morandi-accent mr-3 rounded-full"></div>
+                    <h3 class="text-xl font-bold text-morandi-primary">一、基本資料</h3>
+                </div>
+
+                <!-- Q1 Job Role -->
+                <div class="mb-8">
+                    <label class="block text-lg font-medium mb-4">1. 您的職類 <span class="text-red-400">*</span></label>
+                    <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="西醫師" class="hidden" required>
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">西醫師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="中醫師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">中醫師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="牙醫師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">牙醫師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="藥師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">藥師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="醫事放射師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">醫事放射師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="醫事檢驗師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">醫事檢驗師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="護理師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">護理師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="營養師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">營養師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="呼吸治療師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">呼吸治療師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="聽力師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">聽力師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="物理治療師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">物理治療師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="職能治療師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">職能治療師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="臨床心理師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">臨床心理師</span>
+                        </label>
+                        <label class="cursor-pointer option-card transition-all duration-200">
+                            <input type="radio" name="job" value="語言治療師" class="hidden">
+                            <span class="block text-center py-3 border rounded-lg border-gray-200 text-sm hover:border-morandi-green">語言治療師</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Q2 CCC Experience -->
+                <div>
+                    <label class="block text-lg font-medium mb-4">2. 您過去是否擔任過 CCC 委員？ <span class="text-red-400">*</span></label>
+                    <div class="flex space-x-4">
+                        <label class="cursor-pointer w-full md:w-auto">
+                            <input type="radio" name="experience" value="是" class="hidden" required>
+                            <span class="block text-center py-2 px-8 border rounded-lg border-gray-200 hover:border-morandi-green transition-colors">是</span>
+                        </label>
+                        <label class="cursor-pointer w-full md:w-auto">
+                            <input type="radio" name="experience" value="否" class="hidden">
+                            <span class="block text-center py-2 px-8 border rounded-lg border-gray-200 hover:border-morandi-green transition-colors">否</span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section 2: Self Assessment -->
+            <section class="bg-morandi-card rounded-2xl shadow-sm p-6 md:p-8">
+                <div class="flex items-center mb-2">
+                    <div class="w-1 h-6 bg-morandi-accent mr-3 rounded-full"></div>
+                    <h3 class="text-xl font-bold text-morandi-primary">二、自我評估</h3>
+                </div>
+                <p class="text-morandi-lightText text-sm mb-8 ml-4">
+                    請依據您「當下」的狀態，評估您是否「符合」下列描述：(1=非常不符合 ~ 5=非常符合)
+                </p>
+
+                <div class="space-y-8">
+                    <!-- Likert Question 1 -->
+                    <div class="p-4 bg-morandi-bg/30 rounded-xl hover:bg-morandi-bg/60 transition-colors">
+                        <label class="block font-medium mb-4 text-morandi-text leading-relaxed">
+                            1. 我目前清楚了解「信賴評定 (Entrustment Decision)」與傳統「分數評量」在評估邏輯上的具體差異。<span class="text-red-400">*</span>
+                        </label>
+                        <div class="flex justify-between items-center max-w-md mx-auto md:mx-0">
+                            <span class="text-xs text-gray-400">非常不符合</span>
+                            <div class="flex space-x-2 md:space-x-4">
+                                <label class="cursor-pointer group"><input type="radio" name="q2_1" value="1" class="hidden scale-radio" required><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">1</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_1" value="2" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">2</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_1" value="3" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">3</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_1" value="4" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">4</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_1" value="5" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">5</div></label>
+                            </div>
+                            <span class="text-xs text-gray-400">非常符合</span>
+                        </div>
+                    </div>
+
+                    <!-- Likert Question 2 -->
+                    <div class="p-4 bg-morandi-bg/30 rounded-xl hover:bg-morandi-bg/60 transition-colors">
+                        <label class="block font-medium mb-4 text-morandi-text leading-relaxed">
+                            2. 我熟悉 CCC 會議的運作流程（包含 Portfolio 解讀、共識形成、召開頻率等）。<span class="text-red-400">*</span>
+                        </label>
+                        <div class="flex justify-between items-center max-w-md mx-auto md:mx-0">
+                            <span class="text-xs text-gray-400">非常不符合</span>
+                            <div class="flex space-x-2 md:space-x-4">
+                                <label class="cursor-pointer group"><input type="radio" name="q2_2" value="1" class="hidden scale-radio" required><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">1</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_2" value="2" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">2</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_2" value="3" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">3</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_2" value="4" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">4</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_2" value="5" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">5</div></label>
+                            </div>
+                            <span class="text-xs text-gray-400">非常符合</span>
+                        </div>
+                    </div>
+
+                    <!-- Likert Question 3 -->
+                    <div class="p-4 bg-morandi-bg/30 rounded-xl hover:bg-morandi-bg/60 transition-colors">
+                        <label class="block font-medium mb-4 text-morandi-text leading-relaxed">
+                            3. 我有能力辨識學員何時需啟動補強計畫。<span class="text-red-400">*</span>
+                        </label>
+                        <div class="flex justify-between items-center max-w-md mx-auto md:mx-0">
+                            <span class="text-xs text-gray-400">非常不符合</span>
+                            <div class="flex space-x-2 md:space-x-4">
+                                <label class="cursor-pointer group"><input type="radio" name="q2_3" value="1" class="hidden scale-radio" required><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">1</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_3" value="2" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">2</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_3" value="3" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">3</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_3" value="4" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">4</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_3" value="5" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">5</div></label>
+                            </div>
+                            <span class="text-xs text-gray-400">非常符合</span>
+                        </div>
+                    </div>
+
+                    <!-- Likert Question 4 -->
+                    <div class="p-4 bg-morandi-bg/30 rounded-xl hover:bg-morandi-bg/60 transition-colors">
+                        <label class="block font-medium mb-4 text-morandi-text leading-relaxed">
+                            4. 我有信心能針對學員的臨床缺失，制定出具體的補強計畫 (Remediation Plan)。<span class="text-red-400">*</span>
+                        </label>
+                        <div class="flex justify-between items-center max-w-md mx-auto md:mx-0">
+                            <span class="text-xs text-gray-400">非常不符合</span>
+                            <div class="flex space-x-2 md:space-x-4">
+                                <label class="cursor-pointer group"><input type="radio" name="q2_4" value="1" class="hidden scale-radio" required><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">1</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_4" value="2" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">2</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_4" value="3" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">3</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_4" value="4" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">4</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_4" value="5" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">5</div></label>
+                            </div>
+                            <span class="text-xs text-gray-400">非常符合</span>
+                        </div>
+                    </div>
+
+                    <!-- Likert Question 5 -->
+                    <div class="p-4 bg-morandi-bg/30 rounded-xl hover:bg-morandi-bg/60 transition-colors">
+                        <label class="block font-medium mb-4 text-morandi-text leading-relaxed">
+                            5. 我目前能熟練運用回饋模組 (ADAPT、…) 來引導學員進行自我反思。<span class="text-red-400">*</span>
+                        </label>
+                        <div class="flex justify-between items-center max-w-md mx-auto md:mx-0">
+                            <span class="text-xs text-gray-400">非常不符合</span>
+                            <div class="flex space-x-2 md:space-x-4">
+                                <label class="cursor-pointer group"><input type="radio" name="q2_5" value="1" class="hidden scale-radio" required><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">1</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_5" value="2" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">2</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_5" value="3" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">3</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_5" value="4" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">4</div></label>
+                                <label class="cursor-pointer group"><input type="radio" name="q2_5" value="5" class="hidden scale-radio"><div class="w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-500 group-hover:border-morandi-green transition-all">5</div></label>
+                            </div>
+                            <span class="text-xs text-gray-400">非常符合</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Submit Button -->
+            <div class="text-center pt-4">
+                <button type="submit" class="bg-morandi-accent hover:bg-morandi-accentHover text-white text-lg font-medium py-3 px-12 rounded-full shadow-lg transition-all transform hover:scale-105">
+                    提交問卷
+                </button>
+            </div>
+
+        </form>
+
+        <!-- Footer -->
+        <footer class="mt-12 text-center text-sm text-gray-500 pb-8">
+            <div class="border-t border-gray-300 pt-6 w-1/2 mx-auto mb-4"></div>
+            <p class="font-medium mb-1">主辦單位：教學部 核心能力組</p>
+            <p>聯絡人：林淑雅 (57438) / 楊宜婷 (57429)</p>
+        </footer>
+
+    </div>
+
+    <!-- Success Modal -->
+    <div id="successModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full flex items-center justify-center z-50">
+        <div class="relative p-6 border w-96 shadow-xl rounded-2xl bg-morandi-card border-morandi-primary modal-animate">
+            <div class="text-center">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-morandi-bg text-morandi-green mb-4">
+                    <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h3 class="text-xl leading-6 font-bold text-morandi-primary mb-2">提交成功</h3>
+                <div class="mt-2 px-4 py-2">
+                    <p class="text-sm text-morandi-text leading-relaxed">
+                        資料已傳送至雲端。<br>感謝您對醫學教育的投入。
+                    </p>
+                </div>
+                <div class="items-center px-4 py-3 mt-4">
+                    <button id="closeModalBtn" class="px-6 py-2 bg-morandi-green text-white text-base font-medium rounded-full w-full shadow-sm hover:bg-opacity-90 focus:outline-none transition-transform hover:scale-105">
+                        確定
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 設定您的 Apps Script 部署網址
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwsYHQSGN-W7fCW6na3ozJLILaubnaGaXLw_Qdpo5KW2Ob3IlYBLaEUEp00Qd0jYkabHA/exec"; 
+
+        const modal = document.getElementById('successModal');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const form = document.getElementById('cccForm');
+        const btn = form.querySelector('button[type="submit"]');
+
+        closeModalBtn.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        function handleSubmit(event) {
+            event.preventDefault();
+            
+            if(form.checkValidity()) {
+                const originalText = btn.innerText;
+                
+                // UX Feedback: Loading state
+                btn.innerText = "傳送中...";
+                btn.classList.add('opacity-75', 'cursor-not-allowed');
+                btn.disabled = true;
+
+                // 準備表單資料
+                const formData = new FormData(form);
+
+                // 發送請求到 Apps Script
+                fetch(SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData,
+                    mode: 'no-cors' // 重要：避免 CORS 錯誤
+                })
+                .then(() => {
+                    // 成功時顯示 Modal
+                    showSuccess(originalText);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("傳送失敗，請檢查網路連線或聯絡管理員。");
+                    resetButton(originalText);
+                });
+            } else {
+                // 若表單無效，讓瀏覽器顯示預設提示
+                form.reportValidity();
+            }
+        }
+
+        function showSuccess(originalText) {
+            // 顯示成功 Modal
+            modal.classList.remove('hidden');
+
+            // 重置表單與按鈕
+            btn.innerText = "已完成";
+            btn.classList.replace('bg-morandi-accent', 'bg-morandi-green');
+            form.reset();
+            
+            // 3秒後恢復按鈕原狀
+            setTimeout(() => {
+                resetButton(originalText);
+            }, 3000);
+        }
+
+        function resetButton(originalText) {
+            btn.innerText = originalText;
+            btn.classList.replace('bg-morandi-green', 'bg-morandi-accent');
+            btn.classList.remove('opacity-75', 'cursor-not-allowed');
+            btn.disabled = false;
+        }
+    </script>
+</body>
+</html>
