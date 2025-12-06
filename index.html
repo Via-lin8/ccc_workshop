@@ -17,7 +17,8 @@ export default function App() {
     q5: ''
   });
 
-  const [submitted, setSubmitted] = useState(false);
+  // 將初始狀態改為 true，直接顯示提交成功畫面
+  const [submitted, setSubmitted] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false); // 處理送出中的狀態
   const [errors, setErrors] = useState({});
   const [progress, setProgress] = useState(0);
