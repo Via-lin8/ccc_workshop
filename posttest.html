@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1141207 CCC 實務工作坊-後測問卷</title>
+    <!-- 引入 Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入 React 和 ReactDOM -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <!-- 引入 Babel 用於解析 JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <style>
+        /* 自定義進度條動畫 */
+        .progress-bar {
+            transition: width 0.5s ease-out;
+        }
+        /* 隱藏滾動條但保留功能 */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+</head>
+<body class="bg-[#F2F0EB]">
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        // 更新後的 Google Apps Script 網址
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw4CMmBNeIPRdyWP51KfNpqFkjgRPM9pZdfvnjqijL5HadQD8L-6H5uzoRtYZ3fwpWNzA/exec";
+
+        // 圖示組件
+        const Icons = {
+            Send: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            ),
+            CheckCircle2: ({ size = 24, className = "" }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+            ),
+            AlertCircle: ({ size = 14 }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+            ),
+            Loader2: ({ size = 18, className = "" }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+            ),
+            Star: ({ className }) => (
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            )
+        };
+
+        function App() {
+            const [formData, setFormData] = useState({
+                phoneCode: '',
+                birthCode: '',
+                // Section 2: Learning Outcome
+                lo_q1: '', lo_q2: '', lo_q3: '', lo_q4: '', lo_q5: '',
+                // Section 3: Behavior Intention
+                bi_q1: '', bi_q2: '', bi_q3: '', bi_q4: '',
+                bi_q5_barriers: [], // Array for checkbox
+                bi_q5_other: '',
+                // Section 4: Satisfaction
+                sat_q1: '', sat_q2: '', sat_q3: '', sat_q4: '', sat_q5: '',
+                sat_q6_feedback: ''
+            });
+
+            const [submitted, setSubmitted] = useState(false);
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [errors, setErrors] = useState({});
+            const [progress, setProgress] = useState(0);
+
+            // 莫蘭迪色系配置
+            const theme = {
+                bg: "bg-[#F2F0EB]", // 米色背景
+                header: "bg-[#E8F0EE]", // 淺綠頭部
+                card: "bg-white",
+                primary: "#7A8B8B", // 莫蘭迪綠
+                primaryBg: "bg-[#7A8B8B]",
+                secondary: "#B5C9C3", // 淺灰綠
+                secondaryBg: "bg-[#B5C9C3]",
+                accent: "#D8A48F", // 莫蘭迪粉 (強調)
+                accentText: "text-[#D8A48F]",
+                accentBg: "bg-[#D8A48F]",
+                textDark: "text-[#4A4A4A]",
+                textGray: "text-[#6B7280]",
+                border: "border-[#E5E7EB]"
+            };
+
+            // 計算進度
+            useEffect(() => {
+                const requiredFields = [
+                    'phoneCode', 'birthCode',
+                    'lo_q1', 'lo_q2', 'lo_q3', 'lo_q4', 'lo_q5',
+                    'bi_q1', 'bi_q2', 'bi_q3', 'bi_q4', 
+                    // bi_q5 is check at least one or none? Usually strictly requiring one is safer.
+                    'sat_q1', 'sat_q2', 'sat_q3', 'sat_q4', 'sat_q5'
+                ];
+                
+                let filledCount = 0;
+                requiredFields.forEach(field => {
+                    if (formData[field] && formData[field].length > 0) filledCount++;
+                });
+
+                // Checkbox special check
+                if (formData.bi_q5_barriers.length > 0) filledCount++;
+
+                const total = requiredFields.length + 1; // +1 for checkbox
+                setProgress(Math.round((filledCount / total) * 100));
+            }, [formData]);
+
+            const handleInputChange = (e) => {
+                const { name, value } = e.target;
+                setFormData(prev => ({ ...prev, [name]: value }));
+                if (errors[name]) setErrors(prev => ({ ...prev, [name]: null }));
+            };
+
+            const handleCheckboxChange = (value) => {
+                setFormData(prev => {
+                    const current = prev.bi_q5_barriers;
+                    let updated;
+                    if (current.includes(value)) {
+                        updated = current.filter(item => item !== value);
+                    } else {
+                        updated = [...current, value];
+                    }
+                    return { ...prev, bi_q5_barriers: updated };
+                });
+                if (errors.bi_q5_barriers) setErrors(prev => ({ ...prev, bi_q5_barriers: null }));
+            };
+
+            const validate = () => {
+                const newErrors = {};
+                if (!formData.phoneCode || formData.phoneCode.length !== 3) newErrors.phoneCode = "請輸入手機後3碼";
+                if (!formData.birthCode || formData.birthCode.length !== 2) newErrors.birthCode = "請輸入生日日期2碼";
+
+                // Validate Radio Groups
+                const radioGroups = [
+                    'lo_q1', 'lo_q2', 'lo_q3', 'lo_q4', 'lo_q5',
+                    'bi_q1', 'bi_q2', 'bi_q3', 'bi_q4',
+                    'sat_q1', 'sat_q2', 'sat_q3', 'sat_q4', 'sat_q5'
+                ];
+                radioGroups.forEach(key => {
+                    if (!formData[key]) newErrors[key] = "請完成此題評分";
+                });
+
+                // Validate Checkbox
+                if (formData.bi_q5_barriers.length === 0) {
+                     newErrors.bi_q5_barriers = "請至少選擇一項";
+                }
+
+                setErrors(newErrors);
+                return Object.keys(newErrors).length === 0;
+            };
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                if (!validate()) {
+                    const firstError = document.querySelector('.error-message');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                    return;
+                }
+
+                setIsSubmitting(true);
+
+                try {
+                    // Combine checkbox and other text
+                    const submissionData = {
+                        ...formData,
+                        bi_q5_combined: formData.bi_q5_barriers.join(', ') + (formData.bi_q5_other ? ` (其他: ${formData.bi_q5_other})` : '')
+                    };
+
+                    const response = await fetch(GOOGLE_SCRIPT_URL, {
+                        method: "POST",
+                        body: JSON.stringify(submissionData),
+                    });
+
+                    if (response.ok) {
+                        setSubmitted(true);
+                        window.scrollTo(0, 0);
+                    } else {
+                        alert("送出失敗，請稍後再試。");
+                    }
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("網路連線錯誤，請檢查您的網路狀態。");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            const handleReset = () => {
+                window.location.reload();
+            };
+
+            // Reuseable Question Component
+            const Question = ({ id, text, type = "radio", options = [1,2,3,4,5], labels = {1:"非常不符合", 5:"非常符合"} }) => (
+                <div className="mb-8 last:mb-0 border-b border-gray-100 pb-6 last:border-0">
+                    <label className={`block font-medium ${theme.textDark} mb-4 leading-relaxed`}>
+                        {text} <span className={theme.accentText}>*</span>
+                    </label>
+                    
+                    <div className="flex justify-between items-center gap-2 max-w-xl mx-auto md:mx-0">
+                        <span className="text-xs text-gray-400 hidden md:block w-16 text-right">{labels[1]}</span>
+                        {options.map((val) => (
+                            <label key={val} className="cursor-pointer group relative flex flex-col items-center gap-2 flex-1">
+                                <input
+                                    type="radio"
+                                    name={id}
+                                    value={val}
+                                    checked={formData[id] === String(val)}
+                                    onChange={handleInputChange}
+                                    className="hidden"
+                                />
+                                <div className={`
+                                    w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center text-lg font-medium transition-all duration-300 shadow-sm
+                                    ${formData[id] === String(val) 
+                                        ? `${theme.primaryBg} text-white scale-110 shadow-md ring-4 ring-[#E8F0EE]` 
+                                        : 'bg-[#F5F5F0] text-gray-400 group-hover:bg-[#EAEAE5]'}
+                                `}>
+                                    {val}
+                                </div>
+                                <span className={`text-[10px] md:hidden ${formData[id] === String(val) ? theme.accentText : 'text-gray-300'}`}>
+                                    {val === 1 ? labels[1] : val === 5 ? labels[5] : ''}
+                                </span>
+                            </label>
+                        ))}
+                        <span className="text-xs text-gray-400 hidden md:block w-16">{labels[5]}</span>
+                    </div>
+                    {errors[id] && (
+                        <div className="text-red-400 text-sm mt-3 flex items-center gap-1 error-message justify-center md:justify-start">
+                            <Icons.AlertCircle size={14} /> 請完成此題評分
+                        </div>
+                    )}
+                </div>
+            );
+
+            if (submitted) {
+                return (
+                    <div className={`min-h-screen ${theme.bg} flex items-center justify-center p-4 font-sans`}>
+                        <div className="bg-white p-8 rounded-2xl shadow-xl max-w-lg w-full text-center space-y-6">
+                            <div className="w-20 h-20 bg-[#E8F0EE] rounded-full flex items-center justify-center mx-auto mb-4">
+                                <Icons.CheckCircle2 size={40} className="text-[#7A8B8B]" />
+                            </div>
+                            <h2 className={`text-2xl font-bold ${theme.textDark}`}>提交成功！</h2>
+                            <p className={`${theme.textDark}`}>
+                                感謝您的填寫與參與。<br/>
+                                您的回饋是我們進步的動力。
+                            </p>
+                            <div className="p-4 bg-[#F9F9F9] rounded-lg text-left text-sm text-gray-600">
+                                <p><strong>識別碼：</strong> {formData.phoneCode}{formData.birthCode}</p>
+                            </div>
+                            <button 
+                                onClick={handleReset}
+                                className={`w-full py-3 rounded-lg text-white font-medium transition-colors ${theme.primaryBg} hover:opacity-90`}
+                            >
+                                關閉或填寫下一份
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            return (
+                <div className={`min-h-screen ${theme.bg} font-sans pb-12`}>
+                    <div className="fixed top-0 left-0 w-full h-1.5 bg-gray-200 z-50">
+                        <div 
+                            className={`h-full ${theme.accentBg} transition-all duration-500 ease-out`}
+                            style={{ width: `${progress}%` }}
+                        />
+                    </div>
+
+                    <div className="max-w-3xl mx-auto pt-10 px-4">
+                        <header className="bg-white rounded-t-2xl p-8 shadow-sm border-b-4 border-[#7A8B8B] relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F2F0EB] rounded-full -mr-16 -mt-16 opacity-50"></div>
+                            <div className="relative z-10">
+                                <div className="flex items-center gap-2 mb-3">
+                                    <span className={`px-3 py-1 rounded-full ${theme.header} ${theme.textDark} text-xs font-bold tracking-wider`}>
+                                        POST-TEST
+                                    </span>
+                                    <span className="text-xs text-gray-400">教學部 核心能力組</span>
+                                </div>
+                                <h1 className={`text-2xl md:text-3xl font-bold ${theme.textDark} mb-4 leading-tight`}>
+                                    1141207 CCC 實務工作坊<br/><span className={theme.accentText}>後測問卷 (含滿意度)</span>
+                                </h1>
+                                <p className={`${theme.textDark} opacity-80 leading-relaxed text-sm`}>
+                                    感謝您的參與。為了評估本次工作坊的實際效益並作為未來師資培訓優化的依據，請再次評估您現在的狀態。
+                                </p>
+                            </div>
+                        </header>
+
+                        <form onSubmit={handleSubmit} className="space-y-6 mt-6">
+                            
+                            {/* Section 1: Basic Info */}
+                            <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+                                <div className="flex items-center gap-3 mb-6">
+                                    <div className={`w-1 h-8 ${theme.accentBg} rounded-full`}></div>
+                                    <h2 className={`text-xl font-bold ${theme.textDark}`}>一、基本資料</h2>
+                                </div>
+                                <p className="text-sm text-gray-500 mb-6 bg-[#F9F9F9] p-3 rounded-lg">
+                                    <Icons.AlertCircle className="inline mr-1" size={14} />
+                                    僅供前後測配對分析，不作身分識別
+                                </p>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-sm text-gray-600 mb-2 font-bold">手機號碼 <span className={theme.accentText}>後 3 碼</span></label>
+                                        <input
+                                            type="text"
+                                            name="phoneCode"
+                                            maxLength="3"
+                                            placeholder="例如: 678"
+                                            value={formData.phoneCode}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                handleInputChange({ target: { name: 'phoneCode', value: val }});
+                                            }}
+                                            className={`w-full p-3 rounded-lg border-2 bg-[#FDFDFD] outline-none transition-all ${errors.phoneCode ? 'border-red-300' : 'border-gray-100 focus:border-[#B5C9C3]'}`}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm text-gray-600 mb-2 font-bold">生日日期 <span className={theme.accentText}>2 碼</span></label>
+                                        <input
+                                            type="text"
+                                            name="birthCode"
+                                            maxLength="2"
+                                            placeholder="例如: 09 (5月9日)"
+                                            value={formData.birthCode}
+                                            onChange={(e) => {
+                                                const val = e.target.value.replace(/\D/g, '');
+                                                handleInputChange({ target: { name: 'birthCode', value: val }});
+                                            }}
+                                            className={`w-full p-3 rounded-lg border-2 bg-[#FDFDFD] outline-none transition-all ${errors.birthCode ? 'border-red-300' : 'border-gray-100 focus:border-[#B5C9C3]'}`}
+                                        />
+                                    </div>
+                                </div>
+                                {(errors.phoneCode || errors.birthCode) && (
+                                    <div className="text-red-400 text-sm mt-2 flex items-center gap-1 error-message">
+                                        <Icons.AlertCircle size={14} /> 請完整填寫識別碼欄位
+                                    </div>
+                                )}
+                            </section>
+
+                            {/* Section 2: Learning Outcome */}
+                            <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className={`w-1 h-8 ${theme.primaryBg} rounded-full`}></div>
+                                    <h2 className={`text-xl font-bold ${theme.textDark}`}>二、學習成效評估</h2>
+                                </div>
+                                <p className="text-sm text-gray-500 mb-8 ml-4">
+                                    經過今日的演練，請評估是否符合描述 (1=非常不符合 ~ 5=非常符合)
+                                </p>
+
+                                <Question id="lo_q1" text="1. 我目前清楚了解「信賴評定 (Entrustment Decision)」與傳統「分數評量」在評估邏輯上的具體差異。" />
+                                <Question id="lo_q2" text="2. 我熟悉 CCC 會議的運作流程（包含 Portfolio 解讀、共識形成、召開頻率等）。" />
+                                <Question id="lo_q3" text="3. 我了解對學員做出重大處置（如延訓）時，必須具備哪些條件才符合「可辯護性 (Defensible)」決策。" />
+                                <Question id="lo_q4" text="4. 我有信心能針對學員的臨床缺失，制定出具體的補強計畫 (Remediation Plan)。" />
+                                <Question id="lo_q5" text="5. 我目前能熟練運用 ADAPT 模組來引導學員進行自我反思。" />
+                            </section>
+
+                            {/* Section 3: Behavior Intention */}
+                            <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className={`w-1 h-8 bg-[#A8B5B5] rounded-full`}></div>
+                                    <h2 className={`text-xl font-bold ${theme.textDark}`}>三、學習與應用</h2>
+                                </div>
+                                <p className="text-sm text-gray-500 mb-8 ml-4">
+                                    請評估您在學習成效與未來應用方面的看法 (1=非常不同意 ~ 5=非常同意)
+                                </p>
+
+                                <Question id="bi_q1" text="1. 課程內容符合我個人的學習需求。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="bi_q2" text="2. 我認為我已達成本課程設定的學習目標。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="bi_q3" text="3. 本課程的內容與我的工作實務相關。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="bi_q4" text="4. 我計劃將本次課程所學，應用於我的日常教學中。" labels={{1:"不同意", 5:"同意"}} />
+
+                                {/* Q5 Checkbox */}
+                                <div className="mb-4">
+                                    <label className={`block font-medium ${theme.textDark} mb-4 leading-relaxed`}>
+                                        5. 您認為回到臨床現場執行今日所學，最大的困難點可能在於： <span className={theme.accentText}>*</span>
+                                    </label>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {[
+                                            "人力/時間不足",
+                                            "缺乏具體表單工具",
+                                            "同儕共識不足",
+                                            "給予負面回饋的心理壓力"
+                                        ].map(opt => (
+                                            <label key={opt} className={`cursor-pointer p-4 rounded-lg border-2 transition-all ${formData.bi_q5_barriers.includes(opt) ? `border-[#7A8B8B] bg-[#E8F0EE] text-[#5A6B6B] font-bold` : 'border-gray-100 hover:bg-gray-50'}`}>
+                                                <div className="flex items-center gap-3">
+                                                    <div className={`w-5 h-5 rounded border flex items-center justify-center ${formData.bi_q5_barriers.includes(opt) ? `${theme.primaryBg} border-transparent` : 'border-gray-300'}`}>
+                                                        {formData.bi_q5_barriers.includes(opt) && <Icons.Star className="text-white w-3 h-3" />}
+                                                    </div>
+                                                    <input type="checkbox" className="hidden" onChange={() => handleCheckboxChange(opt)} checked={formData.bi_q5_barriers.includes(opt)} />
+                                                    <span className="text-sm">{opt}</span>
+                                                </div>
+                                            </label>
+                                        ))}
+                                        <div className="md:col-span-2">
+                                            <label className={`cursor-pointer p-4 rounded-lg border-2 transition-all block ${formData.bi_q5_other ? `border-[#7A8B8B] bg-[#E8F0EE]` : 'border-gray-100'}`}>
+                                                <div className="flex flex-col gap-2">
+                                                    <div className="flex items-center gap-2 font-bold text-[#5A6B6B] text-sm">
+                                                        其他
+                                                    </div>
+                                                    <input 
+                                                        type="text" 
+                                                        placeholder="請說明..."
+                                                        className="w-full bg-transparent border-b border-gray-300 focus:border-[#7A8B8B] outline-none text-sm py-1"
+                                                        value={formData.bi_q5_other}
+                                                        onChange={(e) => setFormData(prev => ({...prev, bi_q5_other: e.target.value}))}
+                                                    />
+                                                </div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {errors.bi_q5_barriers && (
+                                        <div className="text-red-400 text-sm mt-2 flex items-center gap-1 error-message">
+                                            <Icons.AlertCircle size={14} /> {errors.bi_q5_barriers}
+                                        </div>
+                                    )}
+                                </div>
+                            </section>
+
+                             {/* Section 4: Satisfaction */}
+                             <section className="bg-white rounded-2xl shadow-sm p-6 md:p-8">
+                                <div className="flex items-center gap-3 mb-2">
+                                    <div className={`w-1 h-8 bg-[#D8A48F] rounded-full`}></div>
+                                    <h2 className={`text-xl font-bold ${theme.textDark}`}>四、課程滿意度評估</h2>
+                                </div>
+                                <p className="text-sm text-gray-500 mb-8 ml-4">
+                                    請針對本次課程的「講師」與「安排」給予整體評分 (1=非常不同意 ~ 5=非常同意)
+                                </p>
+
+                                <Question id="sat_q1" text="1. 講師具備豐富的專業知識與教學熱忱。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="sat_q2" text="2. 課程教材內容與活動安排準備充分。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="sat_q3" text="3. 課程教學清晰有條理，能掌握重點。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="sat_q4" text="4. 課程時間與環境(含硬體設備)安排適當。" labels={{1:"不同意", 5:"同意"}} />
+                                <Question id="sat_q5" text="5. 整體而言，我對本次課程感到滿意。" labels={{1:"不同意", 5:"同意"}} />
+
+                                <div className="mt-8">
+                                    <label className={`block font-medium ${theme.textDark} mb-3`}>
+                                        6. 若未來舉辦進階工作坊，您希望加強哪個部分的深度或其他回饋意見？
+                                    </label>
+                                    <textarea
+                                        rows="4"
+                                        className="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-[#B5C9C3] outline-none bg-[#FDFDFD] transition-all resize-none text-sm"
+                                        placeholder="您的寶貴意見..."
+                                        value={formData.sat_q6_feedback}
+                                        onChange={(e) => setFormData(prev => ({...prev, sat_q6_feedback: e.target.value}))}
+                                    ></textarea>
+                                </div>
+                            </section>
+
+                            {/* Submit */}
+                            <div className={`${theme.header} rounded-xl p-6 text-center md:text-left md:flex justify-between items-center border border-[#7A8B8B] border-opacity-20`}>
+                                <div className="mb-4 md:mb-0">
+                                    <h3 className="text-sm font-bold text-[#5A6B6B] mb-1">聯絡資訊</h3>
+                                    <p className="text-xs text-[#7A8B8B]">主辦單位：教學部 核心能力組</p>
+                                    <p className="text-xs text-[#7A8B8B]">聯絡人：林淑雅 分機 57438；楊宜婷 分機 57429</p>
+                                </div>
+                                
+                                <button
+                                    type="submit"
+                                    disabled={isSubmitting}
+                                    className={`
+                                        group flex items-center justify-center gap-2 px-8 py-3 rounded-full text-white font-bold transition-all shadow-lg
+                                        ${isSubmitting ? 'bg-gray-400 cursor-not-allowed' : `${theme.primaryBg} hover:opacity-90 active:scale-95`} 
+                                        w-full md:w-auto
+                                    `}
+                                >
+                                    {isSubmitting ? (
+                                        <span className="flex items-center gap-2">
+                                            <Icons.Loader2 size={18} className="animate-spin" />
+                                            處理中...
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2">
+                                            提交問卷
+                                            <Icons.Send size={18} className="group-hover:translate-x-1 transition-transform" />
+                                        </span>
+                                    )}
+                                </button>
+                            </div>
+
+                        </form>
+                    </div>
+                    
+                    <div className="text-center text-gray-300 text-xs mt-8 pb-4">
+                        &copy; 1141207 CCC Workshop Post-test
+                    </div>
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
